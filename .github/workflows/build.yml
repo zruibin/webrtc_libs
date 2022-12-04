@@ -1,0 +1,54 @@
+name: Generate WebRTC Library For Linux/Mac/Windows
+
+on:
+  push:
+    # branches: [ master, dev ]
+    tags:
+      - '*.*.*'
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: Release
+
+jobs:
+  generate:
+    name: Merge And Generate Library
+    runs-on: macos-12
+    steps:
+      - name: Check out git repository
+        uses: actions/checkout@v2
+
+      - name: Merge Libs
+        run: python3 main.py move
+
+      - name: Upload Artifacts On Mac
+        uses: actions/upload-artifact@v3
+        with:
+          name: libwebrtc.a.mac.zip
+          path: ${{github.workspace}}/libwebrtc.a.mac.zip
+
+      - name: Upload Artifacts On Linux
+        uses: actions/upload-artifact@v3
+        with:
+          name: libwebrtc.a.linux.zip
+          path: ${{github.workspace}}/libwebrtc.a.linux.zip
+    
+      - name: Upload Artifacts On Windows
+        uses: actions/upload-artifact@v3
+        with:
+          name: libwebrtc.a.windows.zip
+          path: ${{github.workspace}}/libwebrtc.a.windows.zip
+
+      - name: ls and mkdir
+        run: |
+          mkdir build
+          ls -al ${{github.workspace}}
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: ${{github.workspace}}/libwebrtc.a.*.zip
+        # env:
+          # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
